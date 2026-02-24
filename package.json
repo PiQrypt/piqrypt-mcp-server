@@ -1,0 +1,49 @@
+{
+  "name": "@piqrypt/mcp-server",
+  "version": "1.4.0",
+  "description": "PiQrypt MCP Server - Cryptographic audit trail for AI agents",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "mcp",
+    "piqrypt",
+    "audit",
+    "cryptography",
+    "post-quantum",
+    "ai-agents",
+    "compliance",
+    "blockchain-alternative"
+  ],
+  "author": "PiQrypt Inc.",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/piqrypt/piqrypt-mcp-server"
+  },
+  "mcp": {
+    "name": "piqrypt",
+    "description": "PiQrypt cryptographic audit trail",
+    "tools": [
+      "piqrypt_stamp_event",
+      "piqrypt_verify_chain",
+      "piqrypt_export_audit",
+      "piqrypt_search_events"
+    ]
+  }
+}

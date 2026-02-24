@@ -1,0 +1,292 @@
+# PiQrypt MCP Server
+
+**Cryptographic Audit Trail for AI Agents via Model Context Protocol**
+
+[![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.8+-blue)](https://python.org)
+[![Node](https://img.shields.io/badge/node-18+-green)](https://nodejs.org)
+
+---
+
+## 🚀 What is PiQrypt MCP?
+
+PiQrypt MCP Server provides **Model Context Protocol** access to [PiQrypt](https://github.com/piqrypt/piqrypt) — the post-quantum cryptographic audit trail for AI agents.
+
+**Use cases:**
+- 🤖 **AI Agents**: Sign every decision with cryptographic proof
+- 📊 **n8n Workflows**: Add audit trail to automation workflows
+- 🏦 **Trading Bots**: SEC/FINRA compliance for automated trading
+- 👥 **HR Automation**: GDPR-compliant AI hiring decisions
+- 🏥 **Healthcare AI**: HIPAA audit trail for medical decisions
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+- Node.js 18+ 
+- Python 3.8+
+- PiQrypt Core (`pip install piqrypt`)
+
+### Install MCP Server
+
+```bash
+npm install @piqrypt/mcp-server
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/piqrypt/piqrypt-mcp-server
+cd piqrypt-mcp-server
+npm install
+npm run build
+```
+
+---
+
+## ⚙️ Configuration
+
+### Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "piqrypt": {
+      "command": "node",
+      "args": ["/path/to/piqrypt-mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+
+### n8n (v1.88+)
+
+1. Install n8n MCP integration
+2. Add PiQrypt MCP server to configuration
+3. Use in workflows via MCP node
+
+---
+
+## 🛠️ Available Tools
+
+### 1. `piqrypt_stamp_event`
+
+Sign an AI decision with cryptographic proof.
+
+**Parameters:**
+- `agent_id` (string, required): Agent identifier
+- `payload` (object, required): Decision data
+- `previous_hash` (string, optional): Previous event hash for chaining
+
+**Example:**
+```typescript
+const event = await mcp.call('piqrypt_stamp_event', {
+  agent_id: 'trading_bot_v1',
+  payload: {
+    action: 'buy',
+    symbol: 'AAPL',
+    quantity: 100,
+    price: 150.25
+  }
+});
+```
+
+**Returns:**
+```json
+{
+  "version": "AISS-1.0",
+  "agent_id": "trading_bot_v1",
+  "timestamp": 1739382400,
+  "nonce": "uuid-...",
+  "payload": { ... },
+  "previous_hash": "sha256:...",
+  "signature": "base64:..."
+}
+```
+
+---
+
+### 2. `piqrypt_verify_chain`
+
+Verify integrity of event chain.
+
+**Parameters:**
+- `events` (array, required): Events to verify
+
+**Example:**
+```typescript
+const result = await mcp.call('piqrypt_verify_chain', {
+  events: [event1, event2, event3]
+});
+```
+
+**Returns:**
+```json
+{
+  "valid": true,
+  "events_count": 3,
+  "chain_hash": "sha256:...",
+  "errors": []
+}
+```
+
+---
+
+### 3. `piqrypt_export_audit`
+
+Export audit trail for compliance.
+
+**Parameters:**
+- `agent_id` (string, required): Agent to export
+- `certified` (boolean): Request PiQrypt certification
+- `output_format` (string): `json` or `pqz`
+
+**Example:**
+```typescript
+const audit = await mcp.call('piqrypt_export_audit', {
+  agent_id: 'trading_bot_v1',
+  certified: true,
+  output_format: 'json'
+});
+```
+
+---
+
+### 4. `piqrypt_search_events`
+
+Fast search via SQLite index.
+
+**Parameters:**
+- `event_type` (string, optional): Filter by type
+- `from_timestamp` (number, optional): Start time
+- `to_timestamp` (number, optional): End time
+- `limit` (number): Max results (default: 100)
+
+**Example:**
+```typescript
+const trades = await mcp.call('piqrypt_search_events', {
+  event_type: 'trade_executed',
+  from_timestamp: 1739300000,
+  limit: 50
+});
+```
+
+---
+
+## 🔒 Security Model
+
+### Process Isolation
+
+```
+┌─────────────────────────────────────┐
+│  MCP Client (Claude, n8n, etc.)     │
+│  ↓ JSON-RPC over stdio              │
+├─────────────────────────────────────┤
+│  MCP Server (TypeScript/Node.js)    │  ← No crypto here
+│  ↓ subprocess call                  │
+├─────────────────────────────────────┤
+│  Python Bridge (bridge.py)          │
+│  ↓ invokes CLI                      │
+├─────────────────────────────────────┤
+│  PiQrypt CLI (Python)               │
+│  ↓ uses                             │
+├─────────────────────────────────────┤
+│  Core Crypto (aiss package)         │  ← All crypto here
+│  • Ed25519 / Dilithium3             │
+│  • RFC 8785 canonical JSON          │
+│  • Hash chains                      │
+└─────────────────────────────────────┘
+```
+
+### Guarantees
+
+✅ **Private keys never exposed** to MCP layer  
+✅ **All crypto in Python** (Ed25519, Dilithium3)  
+✅ **Same security as CLI** (process isolation)  
+✅ **RFC AISS-1.1 compliant** (identical output)  
+✅ **Input validation** before subprocess call
+
+---
+
+## 📚 Examples
+
+### Trading Bot (n8n)
+
+```
+[Webhook: price alert] 
+    ↓
+[AI Decision: buy/sell?]
+    ↓
+[PiQrypt MCP: stamp decision]  ← Audit trail
+    ↓
+[Execute trade API]
+    ↓
+[Database: store proof]
+```
+
+### HR Automation
+
+```
+[Upload CV]
+    ↓
+[Claude AI: evaluate candidate]
+    ↓
+[PiQrypt MCP: stamp evaluation]  ← GDPR compliance
+    ↓
+[Email HR team]
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Build
+npm run build
+
+# Test bridge
+python3 src/python/bridge.py stamp '{"agent_id":"test","payload":{"action":"test"}}'
+
+# Test MCP server (manual)
+node dist/index.js
+# Then send MCP request via stdin
+```
+
+---
+
+## 📖 Documentation
+
+- [MCP Setup Guide](docs/mcp-setup.md)
+- [Tools Reference](docs/tools-reference.md)
+- [n8n Integration](docs/n8n-integration.md)
+- [Security Model](docs/security-model.md)
+- [RFC Compliance](docs/rfc-compliance.md)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE)
+
+---
+
+## 🔗 Links
+
+- **PiQrypt Core**: https://github.com/piqrypt/piqrypt
+- **MCP Protocol**: https://modelcontextprotocol.io
+- **n8n**: https://n8n.io
+- **Documentation**: https://docs.piqrypt.com
+
+---
+
+**Built with ❤️ by PiQrypt Inc.**
