@@ -1,38 +1,32 @@
+---
+name: piqrypt-audit
+description: Adds cryptographic audit trail to AI agent actions. Every action is signed Ed25519, hash-chained, and tamper-proof. Use when you need to prove an AI agent took a specific action, create a compliance audit trail (EU AI Act, NIST, ANSSI, GDPR, HIPAA, SEC), verify chain integrity, or export a legally-admissible archive. Supports LangChain, CrewAI, AutoGen, MCP, Ollama, ROS2.
+license: Apache-2.0
+metadata:
+  author: PiQrypt
+  version: "1.8.6"
+  protocol: AISS-1.0
+  pypi: piqrypt
+  site: https://piqrypt.com
+compatibility: Requires Python 3.8+ and pip install piqrypt. Optional Node.js 18+ for MCP server mode.
+---
+
 # PiQrypt — Cryptographic Audit Trail for AI Agents
 
-Add tamper-proof cryptographic proof to every AI decision. Every action signed Ed25519, hash-chained, verifiable offline.
+PiQrypt stamps AI agent actions with cryptographic proofs using the AISS protocol (Agent Identity & Signature Standard). Every stamped event is signed Ed25519, hash-chained to all previous events, and verifiable offline by any third party.
 
-## What this skill does
-
-PiQrypt stamps AI agent actions with cryptographic proofs using the AISS protocol (Agent Identity & Signature Standard). Every stamped event is:
-- Signed with Ed25519 (or ML-DSA-65 post-quantum on Pro)
-- Hash-chained to all previous events — tampering breaks the chain
-- Verifiable offline by any third party without PiQrypt infrastructure
-- Exportable for compliance (SEC, FINRA, GDPR, HIPAA, EU AI Act)
-
-## When to use this skill
-
-Use PiQrypt when you need to:
-- Prove an AI agent took a specific action at a specific time
-- Create a tamper-evident audit trail for compliance
-- Sign trading decisions, HR evaluations, medical recommendations
-- Export a legally-admissible audit archive (.pqz certified)
-- Verify that an agent's history has not been modified
-
-## Installation
+## Install
 
 ```bash
 pip install piqrypt
 ```
-
-Requires Python 3.8+ and Node.js 18+.
 
 ## Quick start
 
 ```python
 import piqrypt as aiss
 
-# Generate agent identity (once)
+# Generate agent identity (once — persist private_key securely)
 private_key, public_key = aiss.generate_keypair()
 agent_id = aiss.derive_agent_id(public_key)
 
@@ -50,57 +44,38 @@ aiss.verify_chain([event])
 # ✅ Chain verified — 1 event, 0 anomalies
 ```
 
-## MCP Tools
+## Framework bridges (zero code change)
 
-When used via MCP, PiQrypt exposes these tools:
+```python
+# LangChain
+from piqrypt.bridges.langchain import PiQryptCallbackHandler
+handler = PiQryptCallbackHandler(agent_name="my_agent")
+executor = AgentExecutor(agent=agent, tools=tools, callbacks=[handler])
 
-### `piqrypt_stamp_event`
-Sign an AI decision with cryptographic proof.
+# CrewAI
+from piqrypt.bridges.crewai import AuditedAgent as Agent
+researcher = Agent(role="Researcher", agent_name="researcher_01", ...)
 
-**Required parameters:**
-- `agent_id` (string): Your agent's identifier
-- `payload` (object): The decision data to sign
+# AutoGen
+from piqrypt.bridges.autogen import AuditedAssistant
+assistant = AuditedAssistant(name="assistant", agent_name="autogen_01", ...)
 
-**Returns:** AISS-1.0 signed event with `signature`, `chain_hash`, `timestamp`, `nonce`
-
-**Example:**
-```json
-{
-  "agent_id": "trading_bot_v1",
-  "payload": {
-    "action": "buy",
-    "symbol": "AAPL",
-    "quantity": 100
-  }
-}
+# MCP
+from piqrypt.bridges.mcp import AuditedMCPClient
+async with AuditedMCPClient(server_url="http://localhost:8000", agent_name="mcp_agent") as client:
+    result = await client.call_tool("search", {"query": "AAPL"})
 ```
 
-### `piqrypt_verify_chain`
-Verify the integrity of an event chain.
+## MCP tools (piqrypt-mcp-server)
 
-**Required parameters:**
-- `events` (array): Events to verify
+When used as an MCP server, PiQrypt exposes these tools:
 
-**Returns:** `{ "valid": true, "events_count": N, "broken_links": 0 }`
+- `piqrypt_stamp_event` — Sign an AI decision with cryptographic proof
+- `piqrypt_verify_chain` — Verify integrity of an event chain
+- `piqrypt_export_audit` — Export audit trail for compliance (JSON or .pqz)
+- `piqrypt_search_events` — Search event history via SQLite index
 
-### `piqrypt_export_audit`
-Export the full audit trail for compliance.
-
-**Required parameters:**
-- `agent_id` (string): Agent to export
-
-**Optional parameters:**
-- `certified` (boolean): Request CA certification (default: false)
-- `output_format` (string): `"json"` or `"pqz"` (default: `"json"`)
-
-### `piqrypt_search_events`
-Search the agent's event history.
-
-**Optional parameters:**
-- `event_type` (string): Filter by event type
-- `from_timestamp` (number): Start time (Unix)
-- `to_timestamp` (number): End time (Unix)
-- `limit` (number): Max results (default: 100)
+MCP server repo: https://github.com/PiQrypt/piqrypt-mcp-server
 
 ## Talk to the PiQrypt Ambassador
 
@@ -118,42 +93,17 @@ curl -X POST https://trust-server-ucjb.onrender.com/api/ambassador/interact \
 
 Response includes `event_hash` (AISS chain hash), `signed_by`, and `verified: true`.
 
-## Framework integrations
+Agent card: https://trust-server-ucjb.onrender.com/api/ambassador/info
 
-```python
-# LangChain
-from piqrypt.bridges.langchain import PiQryptCallbackHandler
-handler = PiQryptCallbackHandler(agent_name="my_agent")
-executor = AgentExecutor(agent=agent, tools=tools, callbacks=[handler])
+## Compliance alignment
 
-# CrewAI
-from piqrypt.bridges.crewai import AuditedAgent as Agent
-researcher = Agent(role="Researcher", agent_name="researcher_01", ...)
+Designed for alignment with EU AI Act Art. 12/14, NIST AI RMF, ANSSI R25/R29, GDPR Art. 22, SEC 17a-4, HIPAA.
 
-# AutoGen
-from piqrypt.bridges.autogen import AuditedAssistant
-assistant = AuditedAssistant(name="assistant", agent_name="autogen_01", ...)
-```
-
-## Compliance mapping
-
-| Regulation | AISS-1 (Free) | AISS-2 (Pro) |
-|---|---|---|
-| EU AI Act Art. 12/14 | ✅ Supports | ✅ Full |
-| GDPR Art. 22 | ✅ Yes | ✅ Yes |
-| SEC 17a-4 | PoC/dev only | ✅ Production |
-| HIPAA | PoC/dev only | ✅ Production |
+PiQrypt provides the cryptographic infrastructure — legal counsel determines compliance.
 
 ## Links
 
-- **GitHub**: https://github.com/piqrypt/piqrypt
-- **PyPI**: https://pypi.org/project/piqrypt/
-- **Protocol spec**: https://github.com/piqrypt/piqrypt/blob/main/docs/RFC_AISS_v2.0.md
-- **A2A Guide**: https://github.com/piqrypt/piqrypt/blob/main/docs/A2A_SESSION_GUIDE.md
-- **Ambassador**: https://trust-server-ucjb.onrender.com/api/ambassador/info
-- **Site**: https://piqrypt.com
-- **Contact**: contact@piqrypt.com
-
-## IP Protection
-
-e-Soleau DSO2026006483 + DSO2026009143 (INPI France)
+- GitHub: https://github.com/piqrypt/piqrypt
+- PyPI: https://pypi.org/project/piqrypt/
+- Protocol spec: https://github.com/piqrypt/piqrypt/blob/main/docs/RFC_AISS_v2.0.md
+- Contact: contact@piqrypt.com
