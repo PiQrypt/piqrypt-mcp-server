@@ -1,0 +1,145 @@
+{
+  "name": "PiQrypt MCP Server",
+  "description": "Cryptographic audit trail for AI agents via Model Context Protocol. Every AI decision signed Ed25519, hash-chained, tamper-proof. AISS-1.0 compliant. Post-quantum ready.",
+  "license": "MIT",
+  "homepage": "https://piqrypt.com",
+  "author": {
+    "name": "PiQrypt Inc.",
+    "email": "contact@piqrypt.com",
+    "url": "https://piqrypt.com"
+  },
+  "categories": [
+    "Security",
+    "Compliance",
+    "AI Agents",
+    "Audit"
+  ],
+  "keywords": [
+    "cryptography",
+    "audit-trail",
+    "ai-agents",
+    "compliance",
+    "post-quantum",
+    "ed25519",
+    "hash-chain",
+    "aiss",
+    "piqrypt",
+    "gdpr",
+    "hipaa",
+    "sec",
+    "mcp"
+  ],
+  "tools": [
+    {
+      "name": "piqrypt_stamp_event",
+      "description": "Sign an AI decision with Ed25519 cryptographic proof. Returns a hash-chained, tamper-proof event conforming to AISS-1.0.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["agent_id", "payload"],
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "description": "Agent identifier"
+          },
+          "payload": {
+            "type": "object",
+            "description": "Decision data to sign (never stored raw — only hashed)"
+          },
+          "previous_hash": {
+            "type": "string",
+            "description": "Hash of previous event for chain linking (optional)"
+          }
+        }
+      }
+    },
+    {
+      "name": "piqrypt_verify_chain",
+      "description": "Verify the cryptographic integrity of an event chain. Returns chain_valid: true/false with detailed error report.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["events"],
+        "properties": {
+          "events": {
+            "type": "array",
+            "description": "Array of AISS-stamped events to verify"
+          }
+        }
+      }
+    },
+    {
+      "name": "piqrypt_export_audit",
+      "description": "Export the full audit trail for compliance. Supports JSON and .pqz certified archive formats (SEC, FINRA, GDPR, HIPAA).",
+      "inputSchema": {
+        "type": "object",
+        "required": ["agent_id"],
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "description": "Agent to export"
+          },
+          "certified": {
+            "type": "boolean",
+            "description": "Request PiQrypt CA certification",
+            "default": false
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["json", "pqz"],
+            "description": "Export format",
+            "default": "json"
+          }
+        }
+      }
+    },
+    {
+      "name": "piqrypt_search_events",
+      "description": "Search the agent's event history via SQLite index. Filter by event type, time range, or agent ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "description": "Filter by event type"
+          },
+          "from_timestamp": {
+            "type": "number",
+            "description": "Start time (Unix timestamp)"
+          },
+          "to_timestamp": {
+            "type": "number",
+            "description": "End time (Unix timestamp)"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max results",
+            "default": 100
+          }
+        }
+      }
+    }
+  ],
+  "requirements": {
+    "runtime": ["node>=18", "python>=3.8"],
+    "packages": ["piqrypt"]
+  },
+  "install": {
+    "npm": "@piqrypt/mcp-server",
+    "github": "PiQrypt/piqrypt-mcp-server"
+  },
+  "config": {
+    "claude_desktop": {
+      "mcpServers": {
+        "piqrypt": {
+          "command": "node",
+          "args": ["${installPath}/dist/index.js"]
+        }
+      }
+    }
+  },
+  "links": {
+    "github": "https://github.com/PiQrypt/piqrypt-mcp-server",
+    "documentation": "https://github.com/PiQrypt/piqrypt-mcp-server/blob/main/docs/mcp-setup.md",
+    "core_library": "https://github.com/piqrypt/piqrypt",
+    "pypi": "https://pypi.org/project/piqrypt/"
+  }
+}
