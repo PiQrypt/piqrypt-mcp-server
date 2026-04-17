@@ -127,11 +127,11 @@
     "github": "PiQrypt/piqrypt-mcp-server"
   },
   "config": {
-    "claude_desktop": {
+    "mcp_client": {
       "mcpServers": {
         "piqrypt": {
-          "command": "node",
-          "args": ["${installPath}/dist/index.js"]
+          "command": "piqrypt-mcp-server",
+          "args": []
         }
       }
     }

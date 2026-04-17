@@ -66,16 +66,10 @@ All notable changes to the PiQrypt MCP Server will be documented in this file.
 **Distribution**
 - npm: `@piqrypt/mcp-server`
 - GitHub: https://github.com/piqrypt/piqrypt-mcp-server
-- MCP Registry: (pending submission)
-- n8n Marketplace: (pending submission)
+- Smithery: indexed
+- MCP Registry: submission in progress
+- n8n Marketplace: submission in progress
 
 ---
 
 ## [Unreleased]
-
-### Planned for v1.5.0
-- Daemon mode (long-running Python process for lower latency)
-- Streaming events (Server-Sent Events)
-- Rate limiting middleware
-- Audit logging persistence
-- Webhook notifications for certification completion
