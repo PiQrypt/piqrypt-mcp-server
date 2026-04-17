@@ -1,8 +1,11 @@
 {
   "name": "@piqrypt/mcp-server",
-  "version": "1.4.0",
-  "description": "PiQrypt MCP Server - Cryptographic audit trail for AI agents",
+  "version": "1.5.0",
+  "description": "Cryptographic audit trail for AI agents — sign, chain-verify and export every decision. GDPR / HIPAA / EU AI Act ready. Free & open source.",
   "main": "dist/index.js",
+  "bin": {
+    "piqrypt-mcp-server": "dist/index.js"
+  },
   "type": "module",
   "scripts": {
     "build": "tsc",
@@ -13,12 +16,24 @@
   "keywords": [
     "mcp",
     "piqrypt",
-    "audit",
+    "aiss",
+    "audit-trail",
     "cryptography",
     "post-quantum",
     "ai-agents",
     "compliance",
-    "blockchain-alternative"
+    "ai-governance",
+    "accountability",
+    "eu-ai-act",
+    "gdpr",
+    "hipaa",
+    "finra",
+    "ed25519",
+    "hash-chain",
+    "tamper-proof",
+    "proof-of-continuity",
+    "pcp",
+    "trust"
   ],
   "author": "PiQrypt Inc.",
   "license": "MIT",

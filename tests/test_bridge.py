@@ -1,156 +1,133 @@
 #!/usr/bin/env python3
 """
-Test MCP === CLI Equivalence
+Test MCP Bridge — AISS v2.0 compliance
 
-Verifies that events signed via MCP are cryptographically identical
-to events signed via direct CLI invocation.
-
-This is CRITICAL for RFC compliance and legal standing.
+Verifies that events produced by the bridge are real AISS-signed events,
+not mocks, and that all bridge commands return the expected structure.
 """
 
 import sys
 import json
 import subprocess
+import os
 from pathlib import Path
 
-sys.path.insert(0, '/home/claude/piqrypt-v1.3.0')
+# Bridge path relative to repo root
+REPO_ROOT = Path(__file__).parent.parent
+BRIDGE    = str(REPO_ROOT / "src" / "python" / "bridge.py")
 
-import aiss
 
-
-def test_bridge_output_format():
-    """Test bridge returns valid AISS-1.0 structure."""
+def run_bridge(command: str, params: dict) -> dict:
+    """Execute the bridge CLI and return parsed JSON output."""
     result = subprocess.run(
-        [
-            'python3',
-            'src/python/bridge.py',
-            'stamp',
-            json.dumps({
-                'agent_id': 'test_agent',
-                'payload': {'action': 'test'}
-            })
-        ],
-        cwd='/home/claude/piqrypt-mcp-server',
+        [sys.executable, BRIDGE, command, json.dumps(params)],
         capture_output=True,
         text=True,
     )
-    
-    assert result.returncode == 0
-    event = json.loads(result.stdout)
-    
-    # Verify AISS-1.0 structure
-    assert event['version'] == 'AISS-1.0'
-    assert event['agent_id'] == 'test_agent'
-    assert 'timestamp' in event
-    assert 'nonce' in event
-    assert 'payload' in event
-    assert 'signature' in event
-    assert event['payload']['action'] == 'test'
-    
-    print("✓ Bridge returns valid AISS-1.0 structure")
+    assert result.returncode == 0, (
+        f"Bridge exited {result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}"
+    )
+    # aiss may print verbose lines before the JSON; find first '{' or '['
+    stdout = result.stdout
+    json_start = next(
+        (i for i, c in enumerate(stdout) if c in ('{', '[')),
+        -1,
+    )
+    assert json_start >= 0, f"No JSON found in bridge stdout:\n{stdout}"
+    return json.loads(stdout[json_start:])
+
+
+def test_stamp_event_real_signature():
+    """Bridge stamp must return a real AISS-signed event (no mock)."""
+    result = run_bridge("stamp", {
+        "agent_id": "test_agent",
+        "payload": {"action": "test", "value": 42},
+    })
+
+    # Response envelope
+    assert "event" in result, "Missing 'event' key in stamp response"
+    assert "chain_length" in result, "Missing 'chain_length' in stamp response"
+    assert "vigil_url" in result, "Missing 'vigil_url' in stamp response"
+    assert "hint" in result, "Missing 'hint' in stamp response"
+
+    event = result["event"]
+
+    # AISS event structure
+    assert "version" in event, "Missing 'version' in event"
+    assert event["version"].startswith("AISS-"), f"Bad version: {event['version']}"
+    assert "agent_id" in event, "Missing 'agent_id' in event"
+    assert "timestamp" in event, "Missing 'timestamp' in event"
+    assert "signature" in event, "Missing 'signature' in event"
+    assert event["signature"] != "BRIDGE_MOCK_SIGNATURE", "Signature is still a mock!"
+    assert len(event["signature"]) > 10, "Signature too short to be real"
+
+    assert isinstance(result["chain_length"], int), "chain_length must be int"
+    assert result["chain_length"] >= 1, "chain_length must be >= 1"
+
+    print("✓ stamp_event returns real AISS-signed event")
 
 
 def test_verify_chain():
-    """Test verify_chain bridge."""
-    events = [
-        {
-            "version": "AISS-1.0",
-            "agent_id": "test",
-            "timestamp": 123,
-            "nonce": "uuid",
-            "payload": {},
-            "previous_hash": "genesis",
-            "signature": "sig"
-        }
-    ]
-    
-    result = subprocess.run(
-        [
-            'python3',
-            'src/python/bridge.py',
-            'verify',
-            json.dumps({'events': events})
-        ],
-        cwd='/home/claude/piqrypt-mcp-server',
-        capture_output=True,
-        text=True,
-    )
-    
-    assert result.returncode == 0
-    verification = json.loads(result.stdout)
-    
-    assert 'valid' in verification
-    assert 'events_count' in verification
-    assert verification['events_count'] == 1
-    
+    """Bridge verify must accept events and return validation result."""
+    # First stamp a real event to verify
+    stamp_result = run_bridge("stamp", {
+        "agent_id": "verify_test_agent",
+        "payload": {"step": "pre-verify"},
+    })
+    event = stamp_result["event"]
+
+    result = run_bridge("verify", {"events": [event]})
+
+    assert "valid" in result, "Missing 'valid' in verify response"
+    assert "events_count" in result, "Missing 'events_count' in verify response"
+    assert "errors" in result, "Missing 'errors' in verify response"
+    assert "vigil_url" in result, "Missing 'vigil_url' in verify response"
+    assert result["events_count"] == 1, "events_count should be 1"
+
     print("✓ verify_chain bridge works")
 
 
 def test_search_events():
-    """Test search_events bridge."""
-    result = subprocess.run(
-        [
-            'python3',
-            'src/python/bridge.py',
-            'search',
-            json.dumps({'event_type': 'trade', 'limit': 10})
-        ],
-        cwd='/home/claude/piqrypt-mcp-server',
-        capture_output=True,
-        text=True,
-    )
-    
-    assert result.returncode == 0
-    results = json.loads(result.stdout)
-    
-    assert isinstance(results, list)
-    
+    """Bridge search must return a structured response."""
+    result = run_bridge("search", {"event_type": "test", "limit": 10})
+
+    assert "events" in result, "Missing 'events' in search response"
+    assert "count" in result, "Missing 'count' in search response"
+    assert "vigil_url" in result, "Missing 'vigil_url' in search response"
+    assert isinstance(result["events"], list), "'events' must be a list"
+
     print("✓ search_events bridge works")
 
 
 def test_export_audit():
-    """Test export_audit bridge."""
-    result = subprocess.run(
-        [
-            'python3',
-            'src/python/bridge.py',
-            'export',
-            json.dumps({'agent_id': 'test', 'certified': False})
-        ],
-        cwd='/home/claude/piqrypt-mcp-server',
-        capture_output=True,
-        text=True,
-    )
-    
-    assert result.returncode == 0
-    export_meta = json.loads(result.stdout)
-    
-    assert 'status' in export_meta
-    assert export_meta['status'] == 'success'
-    
+    """Bridge export must return success status."""
+    result = run_bridge("export", {"agent_id": "test_agent", "certified": False})
+
+    assert "status" in result, "Missing 'status' in export response"
+    assert result["status"] == "success", f"Export status: {result['status']}"
+    assert "path" in result, "Missing 'path' in export response"
+    assert "certified" in result, "Missing 'certified' in export response"
+    assert "vigil_url" in result, "Missing 'vigil_url' in export response"
+
     print("✓ export_audit bridge works")
 
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("MCP Bridge Tests — v1.4.0")
+    print("MCP Bridge Tests — v1.5.0")
     print("=" * 60)
     print()
-    
+
     try:
-        test_bridge_output_format()
+        test_stamp_event_real_signature()
         test_verify_chain()
         test_search_events()
         test_export_audit()
-        
+
         print()
         print("─" * 60)
         print("✅ MCP BRIDGE TESTS PASSED")
-        print()
-        print("⚠️  NOTE: Current bridge uses MOCK signatures")
-        print("   Full implementation will invoke real PiQrypt CLI")
-        print("   producing Ed25519/Dilithium3 signatures")
-    
+
     except AssertionError as e:
         print(f"\n❌ Test failed: {e}")
         sys.exit(1)

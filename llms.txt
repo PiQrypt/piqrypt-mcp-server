@@ -1,0 +1,26 @@
+# PiQrypt MCP Server
+Cryptographic audit trail MCP server for AI agents.
+Stamps every agent decision with Ed25519 signature,
+hash-chains events, detects forks and tampering.
+
+Tools:
+  piqrypt_stamp_event    — sign an agent decision
+  piqrypt_verify_chain   — verify chain integrity
+  piqrypt_export_audit   — export audit trail
+  piqrypt_search_events  — search event history
+
+Install (npm):
+  npm install @piqrypt/mcp-server
+  npx @piqrypt/mcp-server
+
+Requires Python bridge:
+  pip install piqrypt
+
+Visualize audit trail (free):
+  piqrypt start
+  # → http://localhost:8421
+
+Protocol : AISS v2.0
+Standard : https://aiss-standard.org
+Full stack: https://piqrypt.com
+GitHub    : https://github.com/PiQrypt/piqrypt-mcp-server

@@ -3,6 +3,7 @@
 **Cryptographic Audit Trail for AI Agents via Model Context Protocol**
 
 [![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
+[![AISS](https://img.shields.io/badge/AISS-v2.0-green)](https://aiss-standard.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-blue)](https://python.org)
 [![Node](https://img.shields.io/badge/node-18+-green)](https://nodejs.org)
@@ -29,13 +30,21 @@ PiQrypt MCP Server provides **Model Context Protocol** access to [PiQrypt](https
 - Python 3.8+
 - PiQrypt Core (`pip install piqrypt`)
 
-### Install MCP Server
+### Install via npx (recommended)
 
 ```bash
-npm install @piqrypt/mcp-server
+npx @piqrypt/mcp-server
 ```
 
-Or build from source:
+No build step required.
+
+### Install globally
+
+```bash
+npm install -g @piqrypt/mcp-server
+```
+
+### Build from source
 
 ```bash
 git clone https://github.com/piqrypt/piqrypt-mcp-server
@@ -56,8 +65,8 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "piqrypt": {
-      "command": "node",
-      "args": ["/path/to/piqrypt-mcp-server/dist/index.js"]
+      "command": "piqrypt-mcp-server",
+      "args": []
     }
   }
 }
@@ -177,13 +186,32 @@ const trades = await mcp.call('piqrypt_search_events', {
 
 ---
 
+## 📊 Visualize your audit trail (free)
+
+Every stamped event is visible in Vigil —
+PiQrypt's local monitoring dashboard.
+
+```bash
+pip install piqrypt
+piqrypt start --tier free
+# → http://localhost:8421
+```
+
+Free tier includes: chain health, VRS risk score,
+7-day history, CRITICAL alerts.
+[Upgrade to Pro](https://piqrypt.com) for 90-day
+history, TrustGate governance, and post-quantum
+signatures.
+
+---
+
 ## 🔒 Security Model
 
 ### Process Isolation
 
 ```
 ┌─────────────────────────────────────┐
-│  MCP Client (Claude, n8n, etc.)     │
+│  MCP Client (any MCP-compatible client)     │
 │  ↓ JSON-RPC over stdio              │
 ├─────────────────────────────────────┤
 │  MCP Server (TypeScript/Node.js)    │  ← No crypto here
@@ -233,7 +261,7 @@ const trades = await mcp.call('piqrypt_search_events', {
 ```
 [Upload CV]
     ↓
-[Claude AI: evaluate candidate]
+[AI Agent: evaluate candidate]
     ↓
 [PiQrypt MCP: stamp evaluation]  ← GDPR compliance
     ↓

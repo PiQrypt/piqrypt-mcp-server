@@ -62,7 +62,7 @@ function callPythonBridge(command: string, params: any): any {
 const tools: Tool[] = [
   {
     name: 'piqrypt_stamp_event',
-    description: 'Sign an AI decision with PiQrypt for cryptographic audit trail. Creates AISS-1.0 signed event with Ed25519 or AISS-2.0 with Dilithium3 (post-quantum).',
+    description: 'Create a tamper-proof cryptographic record of an agent decision. Signs the event with Ed25519, links it to the previous event in a hash chain (AISS v2.0). Call this after every significant agent action. Required for GDPR Art.22, EU AI Act Art.13, HIPAA audit trail, SEC/FINRA trading compliance.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -84,7 +84,7 @@ const tools: Tool[] = [
   },
   {
     name: 'piqrypt_verify_chain',
-    description: 'Verify integrity of PiQrypt event chain. Validates signatures, hash chain, and detects tampering or forks.',
+    description: 'Verify that an agent\'s decision history is intact and untampered. Detects modified events, missing events, hash chain breaks, and forks. Call before trusting any historical agent output.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -99,7 +99,7 @@ const tools: Tool[] = [
   },
   {
     name: 'piqrypt_export_audit',
-    description: 'Export audit trail to JSON or encrypted .pqz archive. Optionally request PiQrypt external certification for legal compliance.',
+    description: 'Export the complete agent audit trail to a portable JSON archive. Set certified=true to request a PiQrypt CA signature for legal admissibility (eIDAS Art.26). The export is self-contained and verifiable without PiQrypt installed.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -124,7 +124,7 @@ const tools: Tool[] = [
   },
   {
     name: 'piqrypt_search_events',
-    description: 'Search audit trail using fast SQLite index. Filter by event type, date range, or agent ID.',
+    description: 'Search the agent\'s cryptographic event history by type, time range, or session. Returns signed events with chain metadata. Use to reconstruct what an agent did during a specific period.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -156,7 +156,7 @@ const tools: Tool[] = [
 const server = new Server(
   {
     name: 'piqrypt-mcp-server',
-    version: '1.4.0',
+    version: '1.5.0',
   },
   {
     capabilities: {

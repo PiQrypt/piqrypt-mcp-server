@@ -3,20 +3,23 @@
 PiQrypt Python Bridge for MCP Server
 
 This bridge allows the MCP server (TypeScript/Node.js) to invoke
-PiQrypt CLI commands via subprocess, maintaining process isolation
-and security.
+AISS cryptographic operations via direct import, maintaining
+process isolation and security.
 
 Security guarantees:
 - Private keys never exposed to MCP layer
 - All crypto operations happen in isolated Python process
-- Input validation before CLI invocation
+- Input validation before any operation
 """
 
 import sys
 import json
-import subprocess
-import shlex
+import os
+import base64
+import pathlib
 from typing import Dict, Any, List, Optional
+
+import aiss
 
 
 class PiQryptBridgeError(Exception):
@@ -24,183 +27,245 @@ class PiQryptBridgeError(Exception):
     pass
 
 
-def _run_piqrypt_cli(args: List[str], input_data: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Execute PiQrypt CLI command safely.
-    
-    Args:
-        args: CLI arguments (e.g., ['stamp', '--payload', '...'])
-        input_data: Optional stdin data
-    
-    Returns:
-        Dict with stdout, stderr, returncode
-    
-    Raises:
-        PiQryptBridgeError: If execution fails
-    """
-    # Construct command
-    cmd = ['python3', '-m', 'cli.main'] + args
-    
-    try:
-        result = subprocess.run(
-            cmd,
-            cwd='/home/claude/piqrypt-v1.3.0',
-            env={'PYTHONPATH': '/home/claude/piqrypt-v1.3.0'},
-            input=input_data.encode('utf-8') if input_data else None,
-            capture_output=True,
-            text=True,
-            timeout=30,
+VIGIL_URL = "http://localhost:8421"
+VIGIL_HINT = "Run `pip install piqrypt && piqrypt start` to visualize your audit trail in Vigil (free)"
+
+AGENTS_DIR = pathlib.Path.home() / ".piqrypt" / "agents"
+
+
+def _load_private_key(agent_name: str) -> bytes:
+    """Load private key bytes for a named agent."""
+    key_file = AGENTS_DIR / agent_name / "private.key.json"
+    if not key_file.exists():
+        raise PiQryptBridgeError(
+            f"Private key not found for agent '{agent_name}'. "
+            "Create it first with: piqrypt agent create <name>"
         )
-        
-        return {
-            'stdout': result.stdout,
-            'stderr': result.stderr,
-            'returncode': result.returncode,
-        }
-    
-    except subprocess.TimeoutExpired:
-        raise PiQryptBridgeError("PiQrypt CLI timeout (30s)")
-    except Exception as e:
-        raise PiQryptBridgeError(f"Failed to execute PiQrypt CLI: {e}")
+    with open(key_file) as f:
+        kdata = json.load(f)
+    return base64.b64decode(kdata["private_key"])
 
 
-def stamp_event(
-    agent_id: str,
-    payload: Dict[str, Any],
-    previous_hash: Optional[str] = None,
-    identity_file: Optional[str] = None
-) -> Dict[str, Any]:
+def _get_or_create_identity(agent_name: str) -> tuple:
     """
-    Stamp an event with PiQrypt.
-    
+    Return (private_key_bytes, agent_id) for agent_name.
+    Creates a new ephemeral identity if none exists.
+    """
+    ident_file = AGENTS_DIR / agent_name / "identity.json"
+    if ident_file.exists():
+        identity = aiss.load_agent_identity(agent_name)
+        private_key = _load_private_key(agent_name)
+        return private_key, identity["agent_id"]
+    else:
+        result = aiss.create_agent_identity(agent_name)
+        private_key = _load_private_key(agent_name)
+        return private_key, result["agent_id"]
+
+
+def _find_identity_by_agent_id(agent_id: str) -> Optional[Dict[str, Any]]:
+    """Scan stored agents to find identity matching agent_id."""
+    if not AGENTS_DIR.exists():
+        return None
+    for agent_dir in AGENTS_DIR.iterdir():
+        ident_file = agent_dir / "identity.json"
+        if ident_file.exists():
+            with open(ident_file) as f:
+                ident = json.load(f)
+            if ident.get("agent_id") == agent_id:
+                return ident
+    return None
+
+
+def stamp_event(params: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Stamp an event with a real AISS v2.0 signature.
+
     Args:
-        agent_id: Agent identifier
-        payload: Event payload (dict)
-        previous_hash: Optional previous event hash for chaining
-        identity_file: Optional path to identity file
-    
+        params: dict with agent_name (or agent_id), payload,
+                optional previous_hash, identity_file
+
     Returns:
-        Signed event dict
+        dict with event, chain_length, vigil_url, hint
     """
-    # For now, return a mock event structure
-    # Full implementation would call CLI with proper identity management
-    import time
-    import hashlib
-    import uuid
-    
-    event = {
-        "version": "AISS-1.0",
-        "agent_id": agent_id,
-        "timestamp": int(time.time()),
-        "nonce": str(uuid.uuid4()),
-        "payload": payload,
-        "previous_hash": previous_hash or "genesis",
-        "signature": "BRIDGE_MOCK_SIGNATURE",
+    agent_name  = params.get("agent_name", params.get("agent_id", "default"))
+    payload     = params.get("payload", {})
+    prev_hash   = params.get("previous_hash")
+
+    private_key, agent_id = _get_or_create_identity(agent_name)
+
+    event = aiss.stamp_event(private_key, agent_id, payload,
+                             previous_hash=prev_hash)
+    aiss.store_event(event, agent_name=agent_name)
+
+    try:
+        events = aiss.load_events(agent_name=agent_name)
+        chain_length = len(events)
+    except Exception:
+        chain_length = 1
+
+    return {
+        "event": event,
+        "chain_length": chain_length,
+        "vigil_url": VIGIL_URL,
+        "hint": VIGIL_HINT,
     }
-    
-    # Note: In production, this would call:
-    # result = _run_piqrypt_cli(['stamp', '--payload', json.dumps(payload), ...])
-    
-    return event
 
 
-def verify_chain(events: List[Dict[str, Any]]) -> Dict[str, Any]:
+def verify_chain(params: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verify integrity of event chain.
-    
+
     Args:
-        events: List of events to verify
-    
+        params: dict with events list, optional agent_name
+
     Returns:
-        Verification result dict
+        dict with valid, events_count, errors, vigil_url
     """
-    # Mock implementation
+    events     = params.get("events", [])
+    agent_name = params.get("agent_name")
+    errors     = []
+    valid      = False
+
+    try:
+        if agent_name:
+            identity = aiss.load_agent_identity(agent_name)
+        elif events:
+            agent_id = events[0].get("agent_id", "")
+            identity = _find_identity_by_agent_id(agent_id)
+            if identity is None:
+                return {
+                    "valid": False,
+                    "events_count": len(events),
+                    "errors": [
+                        f"Identity not found locally for agent_id '{agent_id}'. "
+                        "Pass agent_name to verify a chain whose identity is stored here."
+                    ],
+                    "vigil_url": VIGIL_URL,
+                }
+        else:
+            return {
+                "valid": True,
+                "events_count": 0,
+                "errors": [],
+                "vigil_url": VIGIL_URL,
+            }
+
+        valid = bool(aiss.verify_chain(events, identity))
+
+    except Exception as exc:
+        errors.append(str(exc))
+
     return {
-        "valid": True,
+        "valid": valid,
         "events_count": len(events),
-        "chain_hash": "mock_chain_hash",
-        "errors": [],
+        "errors": errors,
+        "vigil_url": VIGIL_URL,
     }
 
 
-def export_audit(
-    agent_id: str,
-    certified: bool = False,
-    output_format: str = "json"
-) -> Dict[str, Any]:
+def search_events(params: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Export audit trail.
-    
+    Search events using AISS index.
+
     Args:
-        agent_id: Agent ID to export
-        certified: Whether to create certified export
-        output_format: Output format (json, pqz)
-    
+        params: dict with optional agent_name (or agent_id),
+                event_type, from_timestamp, to_timestamp, limit
+
     Returns:
-        Export metadata
+        dict with events list, count, vigil_url
     """
+    participant = params.get("agent_name", params.get("agent_id"))
+    results = aiss.search_events(
+        participant=participant,
+        event_type=params.get("event_type"),
+        after=params.get("from_timestamp"),
+        before=params.get("to_timestamp"),
+        limit=params.get("limit", 50),
+    )
+    return {
+        "events": results,
+        "count": len(results),
+        "vigil_url": VIGIL_URL,
+    }
+
+
+def export_audit(params: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Export agent audit trail.
+
+    Args:
+        params: dict with agent_name (or agent_id), optional certified,
+                output_path
+
+    Returns:
+        dict with status, path, certified, vigil_url
+    """
+    agent_name = params.get("agent_name", params.get("agent_id", "default"))
+    certified  = params.get("certified", False)
+    output     = params.get("output_path",
+                            str(pathlib.Path.home() / ".piqrypt"
+                                / f"audit_{agent_name}.json"))
+
+    identity = aiss.load_agent_identity(agent_name)
+    events   = aiss.load_events(agent_name=agent_name)
+    audit    = aiss.export_audit_chain(identity, events)
+
+    output_path = pathlib.Path(output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(audit, f, indent=2)
+
     return {
         "status": "success",
-        "format": output_format,
-        "events_count": 0,
-        "message": "Export would be created (mock)",
+        "path": str(output_path),
+        "events_count": len(events),
+        "certified": certified,
+        "vigil_url": VIGIL_URL,
     }
-
-
-def search_events(
-    event_type: Optional[str] = None,
-    from_timestamp: Optional[int] = None,
-    to_timestamp: Optional[int] = None,
-    limit: int = 100
-) -> List[Dict[str, Any]]:
-    """
-    Search events using index.
-    
-    Args:
-        event_type: Filter by event type
-        from_timestamp: Start timestamp (Unix UTC)
-        to_timestamp: End timestamp (Unix UTC)
-        limit: Max results
-    
-    Returns:
-        List of matching events
-    """
-    # Mock implementation
-    return []
 
 
 # ─── CLI Interface ────────────────────────────────────────────────────────────
 
 def main():
     """
-    Bridge CLI for testing.
-    
+    Bridge CLI entry point.
+
     Usage:
-        python bridge.py stamp '{"agent_id": "test", "payload": {...}}'
-        python bridge.py verify '{"events": [...]}'
-        python bridge.py search '{"event_type": "trade"}'
+        python bridge.py stamp  '<json_params>'
+        python bridge.py verify '<json_params>'
+        python bridge.py search '<json_params>'
+        python bridge.py export '<json_params>'
     """
     if len(sys.argv) < 3:
         print("Usage: python bridge.py <command> <json_params>", file=sys.stderr)
         sys.exit(1)
-    
+
     command = sys.argv[1]
-    params = json.loads(sys.argv[2])
-    
+    params  = json.loads(sys.argv[2])
+
     try:
-        if command == "stamp":
-            result = stamp_event(**params)
-        elif command == "verify":
-            result = verify_chain(**params)
-        elif command == "export":
-            result = export_audit(**params)
-        elif command == "search":
-            result = search_events(**params)
-        else:
-            raise PiQryptBridgeError(f"Unknown command: {command}")
-        
-        print(json.dumps(result, indent=2))
-    
+        # Redirect fd 1 → fd 2 so aiss verbose output (written at C level)
+        # doesn't corrupt the JSON we print at the end.
+        saved_fd1 = os.dup(1)
+        os.dup2(2, 1)
+        try:
+            if command == "stamp":
+                result = stamp_event(params)
+            elif command == "verify":
+                result = verify_chain(params)
+            elif command == "search":
+                result = search_events(params)
+            elif command == "export":
+                result = export_audit(params)
+            else:
+                raise PiQryptBridgeError(f"Unknown command: {command}")
+        finally:
+            os.dup2(saved_fd1, 1)
+            os.close(saved_fd1)
+
+        sys.stdout.write(json.dumps(result, indent=2) + "\n")
+        sys.stdout.flush()
+
     except Exception as e:
         print(json.dumps({"error": str(e)}), file=sys.stderr)
         sys.exit(1)
