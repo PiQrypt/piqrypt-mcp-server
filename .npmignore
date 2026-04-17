@@ -1,0 +1,9 @@
+.claude/
+SKILL.md
+tests/
+src/
+tsconfig.json
+*.tgz
+.github/
+server.json
+smithery.json
