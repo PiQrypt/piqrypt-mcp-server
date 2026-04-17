@@ -1,14 +1,14 @@
 # Appendix F: MCP Integration (Informative)
 
 **Status:** Informative  
-**Version:** AISS-RFC v1.1 + MCP Extension  
-**Date:** 2026-02-18
+**Version:** AISS v2.0 + MCP Extension  
+**Date:** 2026-04-17
 
 ---
 
 ## F.1 Overview
 
-The Model Context Protocol (MCP) integration provides API access to PiQrypt cryptographic capabilities while maintaining **full RFC AISS-1.1 compliance**.
+The Model Context Protocol (MCP) integration provides API access to PiQrypt cryptographic capabilities while maintaining **full AISS v2.0 compliance**.
 
 MCP acts as a **transport layer** that wraps the PiQrypt CLI, enabling AI agents, workflow automation tools (n8n), and other systems to invoke PiQrypt functionality via JSON-RPC.
 
@@ -23,37 +23,23 @@ MCP acts as a **transport layer** that wraps the PiQrypt CLI, enabling AI agents
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  Layer 1: MCP Client                                    │
-│  (Claude Desktop, n8n, custom agents)                   │
+│  (any MCP-compatible client, n8n, custom agents)        │
 │  ↓ JSON-RPC over stdio                                  │
 ├─────────────────────────────────────────────────────────┤
 │  Layer 2: MCP Server (TypeScript/Node.js)               │
-│  • Tool registration                                    │
-│  • Input validation                                     │
-│  • Rate limiting (optional)                             │
-│  • Audit logging                                        │
-│  ↓ subprocess invocation                                │
+│  • Tool registration & input validation                 │
+│  • Stdio transport                                      │
+│  ↓ subprocess call (process isolation)                  │
 ├─────────────────────────────────────────────────────────┤
 │  Layer 3: Python Bridge (bridge.py)                     │
-│  • CLI command construction                             │
-│  • Output parsing                                       │
-│  • Error handling                                       │
-│  ↓ executes                                             │
-├─────────────────────────────────────────────────────────┤
-│  Layer 4: PiQrypt CLI (cli/main.py)                     │
-│  • Same CLI as manual invocation                        │
-│  ↓ uses                                                 │
-├─────────────────────────────────────────────────────────┤
-│  Layer 5: Core Cryptography (aiss package)              │
-│  • Ed25519 signatures (AISS-1.0)                        │
-│  • Dilithium3 signatures (AISS-2.0)                     │
-│  • RFC 8785 canonical JSON                              │
-│  • SHA-256 hash chains                                  │
-│  • Authority Binding Layer (RFC §5)                     │
-│  • Canonical History Rule (RFC §6)                      │
+│  • Direct aiss import — no CLI subprocess               │
+│  • Real Ed25519 / ML-DSA-65 signatures                  │
+│  • Identity management (~/.piqrypt/agents/)             │
+│  • AISS v2.0 compliant events                           │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Critical separation:** Layers 1-3 contain **zero cryptographic code**. All crypto happens in Layers 4-5 (Python).
+**Critical separation:** Layer 2 contains **zero cryptographic code**. All crypto happens in Layer 3 via direct aiss import. Private keys never leave the Python process.
 
 ---
 
@@ -65,15 +51,16 @@ MCP acts as a **transport layer** that wraps the PiQrypt CLI, enabling AI agents
 
 **Verification:**
 ```python
-# Test: MCP output === CLI output
-event_via_cli = subprocess.run(['piqrypt', 'stamp', ...])
-event_via_mcp = mcp_client.call('piqrypt_stamp_event', ...)
-
-assert event_via_cli == event_via_mcp  # Bit-for-bit identical
+# Test: MCP output is a valid AISS-signed event
+result = mcp_client.call('piqrypt_stamp_event', ...)
+event = result['event']
+assert event['version'].startswith('AISS-')
+assert event['signature'] != 'BRIDGE_MOCK_SIGNATURE'
+aiss.verify_event(public_key, event)  # cryptographic proof
 ```
 
 **Implementation:**
-- MCP server invokes **same Python CLI** as manual usage
+- MCP bridge imports **aiss directly** — no intermediate CLI subprocess
 - No intermediate transformations
 - Same private keys, same algorithms, same output format
 
@@ -185,7 +172,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 {
   "timestamp": "2026-02-18T18:00:00Z",
   "tool": "piqrypt_stamp_event",
-  "caller": "claude-desktop-v1.2.3",
+  "caller": "mcp-client-v1.2.3",
   "params_hash": "sha256:a3f7...",
   "result_event_hash": "sha256:b4e9...",
   "status": "success"
@@ -229,7 +216,7 @@ const audit = await mcp.call('piqrypt_export_audit', {
 
 **For legal/compliance documentation:**
 
-> "Events signed via PiQrypt MCP Server conform to RFC AISS-1.1 (Adoption-Ready) and are cryptographically equivalent to events signed via direct CLI invocation. The MCP layer acts as a transport wrapper and does not modify cryptographic operations."
+> "Events signed via PiQrypt MCP Server conform to AISS v2.0 and are cryptographically equivalent to events signed via direct aiss invocation. The MCP layer acts as a transport wrapper and does not modify cryptographic operations."
 
 ---
 
@@ -269,27 +256,27 @@ const audit = await mcp.call('piqrypt_export_audit', {
 
 **Compliance:** Event can be exported, certified by PiQrypt, and presented in SEC audit.
 
-### Example 2: HR Decision (Claude Desktop)
+### Example 2: HR Decision (automation workflow)
 
 ```
-User: "Evaluate this CV and decide if we should interview"
-Claude:
-  1. Analyzes CV
-  2. Decides: "Recommend interview"
-  3. Calls piqrypt_stamp_event:
-     {
-       "agent_id": "hr_assistant_claude",
-       "payload": {
-         "event_type": "candidate_evaluation",
-         "decision": "recommend_interview",
-         "reasons": ["Strong Python skills", "Relevant experience"],
-         "cv_hash": "sha256:..."
-       }
-     }
-  4. Returns signed decision to user
+Automation trigger: new CV received
+    ↓
+AI evaluation node (any LLM-compatible service)
+    ↓
+piqrypt_stamp_event:
+  {
+    "agent_id": "hr_automation_v1",
+    "payload": {
+      "event_type": "candidate_evaluation",
+      "decision": "recommend_interview",
+      "cv_hash": "sha256:..."
+    }
+  }
+    ↓
+Signed AISS event stored in audit trail
 ```
 
-**Compliance:** GDPR audit trail for AI hiring decision.
+**Compliance:** GDPR Art.22 audit trail for AI-assisted hiring decisions.
 
 ---
 
@@ -326,7 +313,7 @@ try {
 
 ### F.7.3 Performance Considerations
 
-**Subprocess overhead:** Each MCP call spawns a Python subprocess (~50-100ms).
+**Subprocess overhead:** Each MCP call spawns a Python subprocess for process isolation. The Python bridge imports aiss directly (no CLI subprocess) — typical latency 20-50ms.
 
 **Optimization strategies:**
 - Batch operations where possible
@@ -341,7 +328,7 @@ try {
 
 ### F.8.1 Daemon Mode
 
-**Current:** Each MCP call spawns subprocess  
+**Current:** Each MCP call spawns a Python process with direct aiss import (~20-50ms)  
 **Future:** Long-running Python daemon + IPC socket  
 **Benefit:** Reduce latency to <10ms per call
 
@@ -363,7 +350,7 @@ try {
 
 - **MCP Specification:** https://modelcontextprotocol.io
 - **PiQrypt Core:** https://github.com/piqrypt/piqrypt
-- **RFC AISS-1.1:** (this document)
+- **AISS v2.0 Spec:** https://aiss-standard.org
 - **n8n MCP Integration:** https://docs.n8n.io/mcp
 
 ---

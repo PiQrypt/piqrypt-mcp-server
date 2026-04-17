@@ -53,6 +53,7 @@
   },
   "mcp": {
     "name": "piqrypt",
+    "mcpName": "com.piqrypt/audit-trail",
     "description": "PiQrypt cryptographic audit trail",
     "tools": [
       "piqrypt_stamp_event",
