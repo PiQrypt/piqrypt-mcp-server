@@ -81,6 +81,75 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ---
 
+## Compatible with
+
+### MCP clients
+| Client | Version | Notes |
+|--------|---------|-------|
+| Any MCP-compatible client | MCP spec 2024-11+ | stdio transport |
+| n8n | 1.88+ | via MCP node |
+| Cursor | any | add to mcp settings |
+| VS Code | any | add to mcp settings |
+| Continue | any | add to mcp settings |
+| Windsurf | any | add to mcp settings |
+
+### Automation platforms (via MCP node)
+| Platform | Integration | Use case |
+|----------|-------------|----------|
+| n8n | MCP node (native) | No-code audit trail |
+| Make.com | HTTP module | Webhook-triggered stamping |
+| Zapier | Webhooks + HTTP | Basic event recording |
+
+### What you can audit with PiQrypt MCP
+
+Every tool call goes through the same 4 operations —
+stamp, verify, export, search. Here is what that means
+in practice depending on your context:
+
+**Automated trading / finance**
+Any agent that submits orders, rebalances portfolios,
+or triggers transactions can stamp each decision before
+execution. The signed chain is exportable for SEC/FINRA
+audit without any additional infrastructure.
+
+**HR and hiring automation**
+Any workflow that evaluates candidates, scores CVs,
+or routes applicants can stamp each decision. Provides
+a GDPR Art.22 compliant audit trail for AI-assisted
+hiring — who decided what, when, and what data was used
+(hashed, never stored raw).
+
+**Content and publishing pipelines**
+Any agent that drafts, approves, or publishes content
+can stamp each step. Useful when multiple AI agents
+collaborate and you need to prove attribution —
+which agent wrote what, in what order.
+
+**DevOps and CI/CD**
+Any agent that triggers deployments, merges branches,
+or rotates secrets can stamp each action. Provides a
+tamper-evident record of infrastructure changes made
+by autonomous agents.
+
+**Healthcare and medical AI**
+Any diagnostic or triage agent can stamp each
+recommendation. Provides a HIPAA-compliant audit trail
+linking each AI output to a verifiable agent identity.
+
+**The common pattern in all cases:**
+```
+[Agent makes decision]
+↓
+piqrypt_stamp_event    ← sign + chain
+↓
+[Agent executes action]
+↓
+piqrypt_export_audit   ← portable proof, verifiable
+                          without PiQrypt installed
+```
+
+---
+
 ## 🛠️ Available Tools
 
 ### 1. `piqrypt_stamp_event`
