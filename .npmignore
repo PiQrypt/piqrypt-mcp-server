@@ -7,3 +7,5 @@ tsconfig.json
 .github/
 server.json
 smithery.json
+
+mcp-publisher.exe

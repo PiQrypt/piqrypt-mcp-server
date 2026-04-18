@@ -1,65 +1,66 @@
 {
-  "name": "@piqrypt/mcp-server",
-  "version": "1.5.1",
-  "description": "Cryptographic audit trail for AI agents — sign, chain-verify and export every decision. GDPR / HIPAA / EU AI Act ready. Free & open source.",
-  "main": "dist/index.js",
-  "bin": {
-    "piqrypt-mcp-server": "dist/index.js"
-  },
-  "type": "module",
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "start": "node dist/index.js",
-    "test": "node --test"
-  },
-  "keywords": [
-    "mcp",
-    "piqrypt",
-    "aiss",
-    "audit-trail",
-    "cryptography",
-    "post-quantum",
-    "ai-agents",
-    "compliance",
-    "ai-governance",
-    "accountability",
-    "eu-ai-act",
-    "gdpr",
-    "hipaa",
-    "finra",
-    "ed25519",
-    "hash-chain",
-    "tamper-proof",
-    "proof-of-continuity",
-    "pcp",
-    "trust"
-  ],
-  "author": "PiQrypt Inc.",
-  "license": "MIT",
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.5.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.0",
-    "typescript": "^5.3.3"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/piqrypt/piqrypt-mcp-server.git"
-  },
-  "mcp": {
-    "name": "piqrypt",
-    "mcpName": "io.github.PiQrypt/audit-trail",
-    "description": "PiQrypt cryptographic audit trail",
-    "tools": [
-      "piqrypt_stamp_event",
-      "piqrypt_verify_chain",
-      "piqrypt_export_audit",
-      "piqrypt_search_events"
-    ]
-  }
+    "name":  "@piqrypt/mcp-server",
+    "version":  "1.5.1",
+    "description":  "Cryptographic audit trail for AI agents â€” sign, chain-verify and export every decision. GDPR / HIPAA / EU AI Act ready. Free \u0026 open source.",
+    "main":  "dist/index.js",
+    "bin":  {
+                "piqrypt-mcp-server":  "dist/index.js"
+            },
+    "type":  "module",
+    "scripts":  {
+                    "build":  "tsc",
+                    "dev":  "tsc --watch",
+                    "start":  "node dist/index.js",
+                    "test":  "node --test"
+                },
+    "keywords":  [
+                     "mcp",
+                     "piqrypt",
+                     "aiss",
+                     "audit-trail",
+                     "cryptography",
+                     "post-quantum",
+                     "ai-agents",
+                     "compliance",
+                     "ai-governance",
+                     "accountability",
+                     "eu-ai-act",
+                     "gdpr",
+                     "hipaa",
+                     "finra",
+                     "ed25519",
+                     "hash-chain",
+                     "tamper-proof",
+                     "proof-of-continuity",
+                     "pcp",
+                     "trust"
+                 ],
+    "author":  "PiQrypt Inc.",
+    "license":  "MIT",
+    "dependencies":  {
+                         "@modelcontextprotocol/sdk":  "^0.5.0"
+                     },
+    "devDependencies":  {
+                            "@types/node":  "^20.11.0",
+                            "typescript":  "^5.3.3"
+                        },
+    "engines":  {
+                    "node":  "\u003e=18.0.0"
+                },
+    "repository":  {
+                       "type":  "git",
+                       "url":  "git+https://github.com/piqrypt/piqrypt-mcp-server.git"
+                   },
+    "mcp":  {
+                "name":  "piqrypt",
+                "mcpName":  "io.github.PiQrypt/audit-trail",
+                "description":  "PiQrypt cryptographic audit trail",
+                "tools":  [
+                              "piqrypt_stamp_event",
+                              "piqrypt_verify_chain",
+                              "piqrypt_export_audit",
+                              "piqrypt_search_events"
+                          ]
+            },
+    "mcpName":  "io.github.PiQrypt/audit-trail"
 }
