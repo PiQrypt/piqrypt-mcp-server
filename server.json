@@ -1,30 +1,20 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.PiQrypt/audit-trail",
-  "description": "Cryptographic audit trail for AI agents — sign, verify, export. GDPR / HIPAA / EU AI Act.",
-  "package": {
-    "registry": "npm",
-    "name": "@piqrypt/mcp-server",
-    "version": "1.5.0"
+  "description": "Cryptographic audit trail for AI agents. Sign, verify, export. GDPR/HIPAA/EU AI Act.",
+  "repository": {
+    "url": "https://github.com/PiQrypt/piqrypt-mcp-server",
+    "source": "github"
   },
-  "execution": {
-    "command": "piqrypt-mcp-server",
-    "args": []
-  },
-  "capabilities": ["tools"],
-  "tools": [
-    "piqrypt_stamp_event",
-    "piqrypt_verify_chain",
-    "piqrypt_export_audit",
-    "piqrypt_search_events"
-  ],
-  "protocol": "AISS v2.0",
-  "links": {
-    "homepage": "https://piqrypt.com",
-    "standard": "https://aiss-standard.org",
-    "github": "https://github.com/PiQrypt/piqrypt-mcp-server",
-    "pypi": "https://pypi.org/project/piqrypt/"
-  },
-  "license": "MIT",
-  "ip": "e-Soleau DSO2026006483 · DSO2026009143 (INPI France)"
+  "version": "1.5.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@piqrypt/mcp-server",
+      "version": "1.5.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
 }
