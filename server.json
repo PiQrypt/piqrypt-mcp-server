@@ -1,5 +1,5 @@
 {
-  "name": "com.piqrypt/audit-trail",
+  "name": "io.github.PiQrypt/audit-trail",
   "description": "Cryptographic audit trail for AI agents — sign, verify and export every decision. GDPR / HIPAA / EU AI Act ready. Free and open source.",
   "package": {
     "registry": "npm",

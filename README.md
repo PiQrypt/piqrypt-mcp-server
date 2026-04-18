@@ -1,5 +1,5 @@
 # PiQrypt MCP Server
-<!-- mcp-name: com.piqrypt/audit-trail -->
+<!-- mcp-name: io.github.PiQrypt/audit-trail -->
 
 **Cryptographic Audit Trail for AI Agents via Model Context Protocol**
 
