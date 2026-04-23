@@ -7,5 +7,5 @@ tsconfig.json
 .github/
 server.json
 smithery.json
-
+glama.json
 mcp-publisher.exe
