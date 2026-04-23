@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-blue)](https://python.org)
 [![Node](https://img.shields.io/badge/node-18+-green)](https://nodejs.org)
-[![Add to Cursor](https://cursor.com/deeplink/mcp-install-badge.svg)](cursor://anysphere.cursor-deeplink/mcp/install?name=piqrypt&config=eyJjb21tYW5kIjoicGlxcnlwdC1tY3Atc2VydmVyIiwiYXJncyI6W119)
+[![Add to Cursor](https://img.shields.io/badge/Cursor-Install%20MCP-blue)](cursor://anysphere.cursor-deeplink/mcp/install?name=piqrypt&config=eyJjb21tYW5kIjoicGlxcnlwdC1tY3Atc2VydmVyIiwiYXJncyI6W119)
 [![Install in Claude](https://img.shields.io/badge/Claude-Install%20MCP-blue)](https://claude.ai/settings/integrations)
 ---
 
