@@ -374,7 +374,8 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE)
+MCP Server → MIT License - see [LICENSE](LICENSE)
+PiQrypt Core → free tier + commercial tiers
 
 ---
 
