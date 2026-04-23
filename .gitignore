@@ -32,3 +32,5 @@ out/
 .env
 .env.local
 .env.*.local
+
+.claude
