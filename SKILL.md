@@ -1,38 +1,34 @@
 ---
 name: piqrypt-mcp-audit
-description: MCP server tools for cryptographic AI agent audit trails (Ed25519 signatures, AISS chaining). Use for compliance proofs (EU AI Act, NIST), chain verification, audit export. Connects via MCP to piqrypt-mcp-server.
+description: Outils d'aide à l'audit crypto des agents AI (Ed25519, AISS). Pour traçabilité/décision vers conformité AI Act, NIST, RGPD Art.22. npm @piqrypt/mcp-server.
 license: Apache-2.0
 metadata:
-  author: PiQrypt
-  mcp-server: https://github.com/PiQrypt/piqrypt-mcp-server
-  tools: piqrypt_stamp_event piqrypt_verify_chain piqrypt_export_audit piqrypt_search_events
+  conare: https://conare.ai/marketplace/mcp/piqrypt
+  npm: "@piqrypt/mcp-server"
+  pypi: piqrypt
+  github: https://github.com/PiQrypt/piqrypt-mcp-server
 ---
 
 # PiQrypt MCP Audit Tools
 
-Exécutez les outils cryptographiques MCP pour auditer les agents AI.
+**Déjà live** : [Conare.ai](https://conare.ai/marketplace/mcp/piqrypt) + npm
 
 ## When to activate
-- User demande "audit agent", "prove decision", "compliance log"
-- Besoin de signatures crypto ou vérification chaîne
-- Export audit pour EU AI Act/NIST/GDPR
-- Intégration MCP avec LangChain/CrewAI
+- User veut tracer/prouver actions agent AI  
+- Démo audit crypto (AI Act, NIST, RGPD)
+- Signature Ed25519 sur décisions critiques
+- Export tamper-proof de traces d'agent
 
-## MCP Tools disponibles
-| Tool | Description |
-|------|-------------|
-| `piqrypt_stamp_event` | Signe action AI (Ed25519 + hash chain) |
-| `piqrypt_verify_chain` | Vérifie intégrité chaîne d'événements |
-| `piqrypt_export_audit` | Export JSON/.pqz pour compliance |
-| `piqrypt_search_events` | Recherche événements via SQLite |
-
-## Usage MCP
+## Installation user (local)
 ```bash
-# Serveur MCP
-npm install piqrypt-mcp-server  # ou Python equiv
-piqrypt-mcp-server --port 8000
-
-# Agent appelle automatiquement via MCP client
+npm install @piqrypt/mcp-server
+claude mcp add piqrypt -- node dist/index.js
 ```
 
-Repo serveur : https://github.com/PiQrypt/piqrypt-mcp-server [web:7][file:1]
+## MCP Tools disponibles
+| Tool | Fonction |
+|------|----------|
+| `piqrypt_stamp_event` | Signature Ed25519 + hash chain |
+| `piqrypt_verify_chain` | Vérifie intégrité complète |
+| `piqrypt_export_audit` | JSON/.pqz pour conformité |
+| `piqrypt_search_events` | Recherche historique SQLite |
