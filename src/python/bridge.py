@@ -19,7 +19,16 @@ import base64
 import pathlib
 from typing import Dict, Any, List, Optional
 
-import aiss
+try:
+    import aiss
+except ImportError:
+    import subprocess
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "piqrypt", "--quiet"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    import aiss
 
 
 class PiQryptBridgeError(Exception):
