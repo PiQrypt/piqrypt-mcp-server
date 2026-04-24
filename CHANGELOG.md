@@ -1,4 +1,26 @@
-# Changelog — PiQrypt MCP Server
+﻿# Changelog — PiQrypt MCP Server
+
+All notable changes to the PiQrypt MCP Server will be documented in this file.
+
+## [1.5.8] - 2026-04-24
+
+### Fixed
+- index.ts: appel bridge via `/app/.venv/bin/python` au lieu de `python3` (incompatible avec le container Glama)
+- Glama deployment: création d'un venv dédié `/app/.venv` au build avec `piqrypt` installé dedans
+- bridge.py: auto-install `piqrypt` via `subprocess` si `aiss` absent (fallback pour installs locales)
+- .npmignore: `src/python/bridge.py` inclus dans le package npm publié (était exclu par `src/`)
+- package.json: `files` explicite pour garantir la présence du bridge dans le tarball npm
+
+### Added
+- package.json: script `postinstall` pour installer `piqrypt` automatiquement lors d'un `npm install` local
+
+### Glama deployment notes
+- Build steps: `["pnpm install", "pnpm run build", "python -m venv /app/.venv && /app/.venv/bin/pip install piqrypt --quiet"]`
+- Runtime: `/app/.venv/bin/python` — indépendant du Python système Debian (externally managed)
+- Testé et validé sur Glama (Python 3.14 uv + Debian bookworm-slim)
+
+---
+# Changelog â€” PiQrypt MCP Server
 
 All notable changes to the PiQrypt MCP Server will be documented in this file.
 
@@ -13,8 +35,8 @@ All notable changes to the PiQrypt MCP Server will be documented in this file.
 ### Added
 - Vigil URL hint in all tool responses
 - `chain_length` in stamp_event response
-- `llms.txt` — LLM-readable server description
-- `server.json` — MCP Registry metadata
+- `llms.txt` â€” LLM-readable server description
+- `server.json` â€” MCP Registry metadata
 - `bin` entry: `piqrypt-mcp-server` global command
 - npx installation support
 
@@ -28,7 +50,7 @@ All notable changes to the PiQrypt MCP Server will be documented in this file.
 
 ## [1.4.0] - 2026-02-18
 
-### 🚀 Initial Release — MCP Integration
+### ðŸš€ Initial Release â€” MCP Integration
 
 **MCP Server (TypeScript/Node.js)**
 - Model Context Protocol server for PiQrypt
@@ -38,23 +60,23 @@ All notable changes to the PiQrypt MCP Server will be documented in this file.
 - Compatible with any MCP-compatible client (Claude Desktop, n8n 1.88+, and others)
 
 **Python Bridge**
-- `src/python/bridge.py` — subprocess wrapper for PiQrypt CLI
+- `src/python/bridge.py` â€” subprocess wrapper for PiQrypt CLI
 - Process isolation (no crypto in TypeScript layer)
 - Security: private keys never exposed to MCP server
 - Identical output to direct CLI invocation
 
 **Documentation**
 - README with installation, configuration, examples
-- RFC Appendix F — MCP Integration Compliance
+- RFC Appendix F â€” MCP Integration Compliance
 - Tools reference, security model, n8n integration guide
 
 **Compliance**
-- ✅ RFC AISS-1.1 compliant (all events identical to CLI)
-- ✅ Ed25519 / Dilithium3 signatures (same algorithms)
-- ✅ RFC 8785 canonical JSON (same implementation)
-- ✅ Authority Binding Layer compatible
-- ✅ Canonical History Rule compatible
-- ✅ External certification compatible
+- âœ… RFC AISS-1.1 compliant (all events identical to CLI)
+- âœ… Ed25519 / Dilithium3 signatures (same algorithms)
+- âœ… RFC 8785 canonical JSON (same implementation)
+- âœ… Authority Binding Layer compatible
+- âœ… Canonical History Rule compatible
+- âœ… External certification compatible
 
 **Use Cases**
 - AI agents (Claude Desktop with MCP)
@@ -73,3 +95,4 @@ All notable changes to the PiQrypt MCP Server will be documented in this file.
 ---
 
 ## [Unreleased]
+
