@@ -1,7 +1,6 @@
 .claude/
 SKILL.md
 tests/
-src/
 tsconfig.json
 *.tgz
 .github/
@@ -9,3 +8,4 @@ server.json
 smithery.json
 glama.json
 mcp-publisher.exe
+src/index.ts

@@ -1,7 +1,7 @@
 {
     "name": "@piqrypt/mcp-server",
-    "version": "1.5.3",
-    "description": "Cryptographic audit trail for AI agents â€” sign, chain-verify and export every decision. GDPR / HIPAA / EU AI Act ready. Free & open source.",
+    "version": "1.5.4",
+    "description": "Cryptographic audit trail for AI agents — sign, chain-verify and export every decision. GDPR / HIPAA / EU AI Act ready. Free & open source.",
     "main": "dist/index.js",
     "bin": {
         "piqrypt-mcp-server": "dist/index.js"
@@ -11,8 +11,13 @@
         "build": "tsc",
         "dev": "tsc --watch",
         "start": "node dist/index.js",
-        "test": "node --test"
+        "test": "node --test",
+        "postinstall": "python3 -m pip install piqrypt --quiet 2>/dev/null || pip install piqrypt --quiet 2>/dev/null || true"
     },
+    "files": [
+        "dist/",
+        "src/python/bridge.py"
+    ],
     "keywords": [
         "mcp",
         "piqrypt",
