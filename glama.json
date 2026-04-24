@@ -1,64 +1,6 @@
 {
-  "$schema": "https://glama.ai/mcp/servers/schema.json",
-  "name": "PiQrypt MCP Server",
-  "description": "Cryptographic audit trail for AI agents via Model Context Protocol. Every AI decision signed Ed25519, hash-chained, tamper-proof. AISS-1.0 compliant. Post-quantum ready.",
-  "license": "MIT",
-  "homepage": "https://piqrypt.com",
-  "author": {
-    "name": "PiQrypt Inc.",
-    "email": "contact@piqrypt.com",
-    "url": "https://piqrypt.com"
-  },
-  "categories": [
-    "Security",
-    "Legal & Compliance",
-    "Blockchain"
-  ],
-  "keywords": [
-    "cryptography",
-    "audit-trail",
-    "ai-agents",
-    "compliance",
-    "post-quantum",
-    "ed25519",
-    "hash-chain",
-    "aiss",
-    "piqrypt",
-    "gdpr",
-    "hipaa",
-    "sec",
-    "mcp"
-  ],
-  "tools": [
-    {
-      "name": "piqrypt_stamp_event",
-      "description": "Sign an AI decision with Ed25519 cryptographic proof. Returns a hash-chained, tamper-proof event conforming to AISS-1.0."
-    },
-    {
-      "name": "piqrypt_verify_chain",
-      "description": "Verify the cryptographic integrity of an event chain. Returns chain_valid: true/false with detailed error report."
-    },
-    {
-      "name": "piqrypt_export_audit",
-      "description": "Export the full audit trail for compliance. Supports JSON and .pqz certified archive formats (SEC, FINRA, GDPR, HIPAA)."
-    },
-    {
-      "name": "piqrypt_search_events",
-      "description": "Search the agent's event history via SQLite index. Filter by event type, time range, or agent ID."
-    }
-  ],
-  "repository": "https://github.com/PiQrypt/piqrypt-mcp-server",
-  "links": {
-    "documentation": "https://github.com/PiQrypt/piqrypt-mcp-server/blob/main/docs/mcp-setup.md",
-    "core_library": "https://github.com/piqrypt/piqrypt",
-    "pypi": "https://pypi.org/project/piqrypt/"
-  },
-  "install": {
-    "npm": "@piqrypt/mcp-server",
-    "github": "PiQrypt/piqrypt-mcp-server"
-  },
-  "requirements": {
-    "runtime": ["node>=18", "python>=3.8"],
-    "packages": ["piqrypt"]
-  }
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": [
+    "piqrypt"
+  ]
 }
