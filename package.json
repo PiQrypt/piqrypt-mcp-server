@@ -1,6 +1,6 @@
 {
     "name": "@piqrypt/mcp-server",
-    "version": "1.5.6",
+    "version": "1.5.7",
     "description": "Cryptographic audit trail for AI agents — sign, chain-verify and export every decision. GDPR / HIPAA / EU AI Act ready. Free & open source.",
     "main": "dist/index.js",
     "bin": {
