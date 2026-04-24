@@ -47,7 +47,7 @@ function callPythonBridge(command: string, params: any): any {
   try {
     const paramsJson = JSON.stringify(params);
     const result = execSync(
-      `uv run python ${PYTHON_BRIDGE} ${command} '${paramsJson}'`,
+      `/app/.venv/bin/python ${PYTHON_BRIDGE} ${command} '${paramsJson}'`,
       { encoding: 'utf-8', timeout: 30000 }
     );
     return JSON.parse(result);
