@@ -4,6 +4,7 @@
 **Cryptographic Audit Trail for AI Agents via Model Context Protocol**
 
 [![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
+[![npm downloads](https://img.shields.io/npm/dm/%40piqrypt%2Fmcp-server?style=flat-square&color=00e09a)](https://www.npmjs.com/package/@piqrypt/mcp-server)
 [![AISS](https://img.shields.io/badge/AISS-v2.0-green)](https://aiss-standard.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-blue)](https://python.org)
