@@ -2,6 +2,13 @@
 
 All notable changes to the PiQrypt MCP Server will be documented in this file.
 
+## [1.5.11] - 2026-05-06
+
+### Fixed
+- bridge.py: clear error message when piqrypt not installed — replaces silent pip auto-install with actionable JSON error on stderr + exit(1)
+
+---
+
 ## [1.5.10] - 2026-05-06
 
 ### Fixed

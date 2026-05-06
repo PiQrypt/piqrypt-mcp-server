@@ -22,13 +22,13 @@ from typing import Dict, Any, List, Optional
 try:
     import aiss
 except ImportError:
-    import subprocess
-    subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", "piqrypt", "--quiet"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    import aiss
+    print(json.dumps({
+        "error": "piqrypt is not installed in this Python environment.",
+        "fix": "pip install piqrypt",
+        "docs": "https://piqrypt.com",
+        "hint": "Make sure to install piqrypt in the same Python environment used by the MCP server. Set PIQRYPT_PYTHON env var to specify a Python executable."
+    }), file=sys.stderr)
+    sys.exit(1)
 
 
 class PiQryptBridgeError(Exception):
