@@ -2,6 +2,13 @@
 
 All notable changes to the PiQrypt MCP Server will be documented in this file.
 
+## [1.5.10] - 2026-05-06
+
+### Fixed
+- package.json: removed `postinstall` script causing fatal npm install error on Windows (`2>/dev/null`, `true` are Linux-only shell syntax)
+
+---
+
 ## [1.5.9] - 2026-05-06
 
 ### Fixed
