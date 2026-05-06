@@ -2,6 +2,13 @@
 
 All notable changes to the PiQrypt MCP Server will be documented in this file.
 
+## [1.5.12] - 2026-05-06
+
+### Changed
+- docs: README updated with agent management, Vigil setup, PIQRYPT_PYTHON variable
+
+---
+
 ## [1.5.11] - 2026-05-06
 
 ### Fixed
