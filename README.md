@@ -29,22 +29,26 @@ PiQrypt MCP Server provides **Model Context Protocol** access to [PiQrypt](https
 ## 📦 Installation
 
 ### Prerequisites
-- Node.js 18+ 
-- Python 3.8+
-- PiQrypt Core (`pip install piqrypt`)
 
-### Install via npx (recommended)
+**1. Install piqrypt (required — Python 3.8+)**
 
 ```bash
-npx @piqrypt/mcp-server
+pip install piqrypt
 ```
 
-No build step required.
+The MCP server delegates all cryptographic operations to the `piqrypt` Python package.
+If it is not installed, the server will return a clear error on every tool call.
 
-### Install globally
+**2. Install the MCP server (Node.js 18+)**
 
 ```bash
 npm install -g @piqrypt/mcp-server
+```
+
+### Install via npx (no global install)
+
+```bash
+npx @piqrypt/mcp-server
 ```
 
 ### Build from source
@@ -54,6 +58,37 @@ git clone https://github.com/piqrypt/piqrypt-mcp-server
 cd piqrypt-mcp-server
 npm install
 npm run build
+```
+
+### PIQRYPT_PYTHON — custom Python environment
+
+By default the server uses `python3` (Linux/Mac) or `python` (Windows).
+If `piqrypt` is installed in a virtual environment, set this variable to point to the right interpreter:
+
+**Windows**
+```cmd
+set PIQRYPT_PYTHON=C:\path\to\venv\Scripts\python.exe
+```
+
+**Linux / Mac**
+```bash
+export PIQRYPT_PYTHON=/path/to/venv/bin/python
+```
+
+To make it persistent, add it to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "piqrypt": {
+      "command": "piqrypt-mcp-server",
+      "args": [],
+      "env": {
+        "PIQRYPT_PYTHON": "/path/to/venv/bin/python"
+      }
+    }
+  }
+}
 ```
 
 ---
@@ -258,14 +293,16 @@ const trades = await mcp.call('piqrypt_search_events', {
 
 ---
 
-## 📊 Visualize your audit trail (free)
+## 📊 Vigil Dashboard (optional, free)
 
 Every stamped event is visible in Vigil —
 PiQrypt's local monitoring dashboard.
 
+> **Note:** Vigil is not launched automatically by the MCP server.
+> You must start it separately before opening the dashboard.
+
 ```bash
-pip install piqrypt
-piqrypt start --tier free
+piqrypt vigil
 # → http://localhost:8421
 ```
 
@@ -274,6 +311,21 @@ Free tier includes: chain health, VRS risk score,
 [Upgrade to Pro](https://piqrypt.com) for 90-day
 history, TrustGate governance, and post-quantum
 signatures.
+
+---
+
+## 🗑️ Managing Agents
+
+Agents are created automatically on first stamp. To view and delete agents:
+
+1. Start Vigil: `piqrypt vigil`
+2. Open http://localhost:8421
+3. Go to **All Agents** view
+4. Check the agents to delete → click **✕ Delete selected**
+5. Confirm — Vigil returns to the welcome screen when no agents remain
+
+> Agents are stored in `~/.piqrypt/agents/` on your machine.
+> Deleting an agent removes its keys and event history permanently.
 
 ---
 
@@ -354,6 +406,38 @@ python3 src/python/bridge.py stamp '{"agent_id":"test","payload":{"action":"test
 # Test MCP server (manual)
 node dist/index.js
 # Then send MCP request via stdin
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### `Error: piqrypt is not installed in this Python environment`
+
+The Python interpreter used by the MCP server cannot find the `piqrypt` package.
+
+**Fix:**
+```bash
+pip install piqrypt
+```
+
+If `piqrypt` is installed in a virtual environment and not the system Python, set `PIQRYPT_PYTHON` to point to the correct interpreter:
+
+```bash
+# Linux / Mac
+export PIQRYPT_PYTHON=/path/to/venv/bin/python
+
+# Windows
+set PIQRYPT_PYTHON=C:\path\to\venv\Scripts\python.exe
+```
+
+To verify which Python the server will use:
+```bash
+# Linux / Mac
+$PIQRYPT_PYTHON -c "import aiss; print('ok')"
+
+# Windows
+%PIQRYPT_PYTHON% -c "import aiss; print('ok')"
 ```
 
 ---
