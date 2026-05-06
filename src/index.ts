@@ -30,7 +30,7 @@ import {
   ListToolsRequestSchema,
   Tool,
 } from '@modelcontextprotocol/sdk/types.js';
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -44,16 +44,22 @@ const PYTHON_BRIDGE = join(__dirname, '../src/python/bridge.py');
  * Execute Python bridge command
  */
 function callPythonBridge(command: string, params: any): any {
-  try {
-    const paramsJson = JSON.stringify(params);
-    const result = execSync(
-      `/app/.venv/bin/python ${PYTHON_BRIDGE} ${command} '${paramsJson}'`,
-      { encoding: 'utf-8', timeout: 30000 }
-    );
-    return JSON.parse(result);
-  } catch (error: any) {
-    throw new Error(`PiQrypt bridge error: ${error.message}`);
-  }
+  const pythonCmd = process.env.PIQRYPT_PYTHON
+    || (process.platform === 'win32' ? 'python' : 'python3');
+
+  const result = spawnSync(
+    pythonCmd,
+    [PYTHON_BRIDGE, command, JSON.stringify(params)],
+    { encoding: 'utf-8', timeout: 30000 }
+  );
+
+  if (result.error) throw new Error(`PiQrypt bridge spawn error: ${result.error.message}`);
+  if (result.status !== 0) throw new Error(`PiQrypt bridge error: ${result.stderr}`);
+
+  const stdout = result.stdout;
+  const jsonStart = stdout.indexOf('{');
+  if (jsonStart === -1) throw new Error(`No JSON in bridge output: ${stdout}`);
+  return JSON.parse(stdout.slice(jsonStart));
 }
 
 /**
@@ -156,7 +162,7 @@ const tools: Tool[] = [
 const server = new Server(
   {
     name: 'piqrypt-mcp-server',
-    version: '1.5.0',
+    version: '1.5.9',
   },
   {
     capabilities: {

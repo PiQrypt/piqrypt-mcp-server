@@ -2,6 +2,15 @@
 
 All notable changes to the PiQrypt MCP Server will be documented in this file.
 
+## [1.5.9] - 2026-05-06
+
+### Fixed
+- index.ts: Windows compatibility — `execSync` shell replaced by `spawnSync` (no shell, no quoting issues)
+- index.ts: cross-platform Python detection (`python` on Windows, `python3` on Linux/Mac, override via `PIQRYPT_PYTHON` env var)
+- index.ts: JSON parsed with `indexOf('{')` guard to handle any preamble in bridge stdout
+
+---
+
 ## [1.5.8] - 2026-04-24
 
 ### Fixed
